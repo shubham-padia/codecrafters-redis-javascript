@@ -1,8 +1,27 @@
-export const set = (key, value, object) => {
-    return {...object, [key]: value};
-}
+import { NULL_BULK_STRING } from "./constants.js";
+
+export const set = (key, value, object, expiresInMilliseconds = null) => {
+  return {
+    ...object,
+    [key]: { value, createdAt: new Date(), expiresInMilliseconds },
+  };
+};
 
 export const get = (key, object) => {
-    if (key in object) return object[key]
-    else return '$-1\r\n';
-}
+  if (key in object) {
+    const expiresInMilliseconds = object[key]['expiresInMilliseconds'];
+    console.log(expiresInMilliseconds);
+    if (expiresInMilliseconds) {
+    console.log(new Date().getTime());
+    console.log(object[key]["createdAt"].getTime() + expiresInMilliseconds);
+    }
+    if (
+      expiresInMilliseconds &&
+      new Date().getTime() >=
+        object[key]["createdAt"].getTime() + expiresInMilliseconds
+    ) {
+      delete object[key];
+      return NULL_BULK_STRING;
+    } else return object[key]["value"];
+  } else return NULL_BULK_STRING;
+};

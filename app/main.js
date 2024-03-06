@@ -1,11 +1,13 @@
 import net from 'net';
+
+import { NULL_BULK_STRING, OK_RESP_STRING } from './constants.js';
 import { decode, encodeBulkString } from "./RespParser.js";
 import { set, get } from "./getSet.js"
 
 // You can use print statements as follows for debugging, they'll be visible when running tests.
 console.log("Logs from your program will appear here!");
 
-const OK_RESP_STRING = '+OK\r\n';
+
 
 const server = net.createServer((connection) => {
   // Handle connection
@@ -32,15 +34,24 @@ server.on("connection", (socket) => {
         socket.write(`+${decodedData[1]}\r\n`);
       }
 
-      if (decodedData.length === 3 && decodedData[0].toUpperCase() === 'SET') {
-        globalObject = set(decodedData[1], decodedData[2], globalObject);
+      if (decodedData.length === 3 || decodedData.length === 5 && decodedData[0].toUpperCase() === 'SET') {
+        let expiresInMilliseconds = null;
+        if (decodedData.length === 5 && decodedData[3].toUpperCase() === 'PX') {
+          expiresInMilliseconds = Number(decodedData[4])
+        }
+
+        globalObject = set(decodedData[1], decodedData[2], globalObject, expiresInMilliseconds);
+        
         socket.write(OK_RESP_STRING);
       }
 
       if (decodedData.length === 2 && decodedData[0].toUpperCase() === 'GET') {
         const value = get(decodedData[1], globalObject);
-        console.log(value);
-        socket.write(encodeBulkString(value));
+        if (value === NULL_BULK_STRING) {
+          socket.write(value);
+        } else {
+          socket.write(encodeBulkString(value));
+        }
       }
     }
   });

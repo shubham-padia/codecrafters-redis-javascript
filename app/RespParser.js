@@ -3,11 +3,8 @@
 // inside which is just a bunch of bytes basically
 
 import { findFirstInteger } from './utils.js';
+import { PROTOCOL_TERMINATOR, SIMPLE_STRING_PREFIX, ARRAY_PREFIX, BULK_STRING_REGEX } from './constants.js';
 
-const SIMPLE_STRING_PREFIX = "+";
-const ARRAY_PREFIX = "*";
-const BULK_STRING_REGEX = /^\$[0-9]+\\r\\n(.+)\\r\\n/gi;
-const PROTOCOL_TERMINATOR = "\r\n";
 
 const escapeRegExp = (str) => {
     str = str.replace(/\r\n/g, "\\r\\n");
