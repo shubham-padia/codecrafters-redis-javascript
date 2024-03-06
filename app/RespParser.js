@@ -71,3 +71,7 @@ export const decode = (str) => {
 
   if (isArray(str)) return decodeArray(str);
 };
+
+export const encodeBulkString = (str) => {
+    return `$${str.length}${PROTOCOL_TERMINATOR}${str}${PROTOCOL_TERMINATOR}`;
+}

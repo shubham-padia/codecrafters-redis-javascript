@@ -1,16 +1,22 @@
 import net from 'net';
-import { decode } from "./RespParser.js";
+import { decode, encodeBulkString } from "./RespParser.js";
+import { set, get } from "./getSet.js"
 
 // You can use print statements as follows for debugging, they'll be visible when running tests.
 console.log("Logs from your program will appear here!");
 
+const OK_RESP_STRING = '+OK\r\n';
+
 const server = net.createServer((connection) => {
   // Handle connection
 });
+
+let globalObject = {};
+
 server.on("connection", (socket) => {
   socket.on("data", (data) => {
     const decodedData = decode(data.toString());
-    
+
     if (
       typeof decodedData === "string" ||
       (decodedData instanceof String && decodedData.toUpperCase() === "PING")
@@ -21,8 +27,20 @@ server.on("connection", (socket) => {
       if (decodedData.length === 1 && decodedData[0].toUpperCase() === 'PING') {
         socket.write("+PONG\r\n");
       }
+
       if (decodedData.length === 2 && decodedData[0].toUpperCase() === 'ECHO') {
         socket.write(`+${decodedData[1]}\r\n`);
+      }
+
+      if (decodedData.length === 3 && decodedData[0].toUpperCase() === 'SET') {
+        globalObject = set(decodedData[1], decodedData[2], globalObject);
+        socket.write(OK_RESP_STRING);
+      }
+
+      if (decodedData.length === 2 && decodedData[0].toUpperCase() === 'GET') {
+        const value = get(decodedData[1], globalObject);
+        console.log(value);
+        socket.write(encodeBulkString(value));
       }
     }
   });
