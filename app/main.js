@@ -45,6 +45,10 @@ server.on("connection", (socket) => {
         socket.write(OK_RESP_STRING);
       }
 
+      if (decodedData.length === 2 && decodedData[0].toUpperCase() === 'INFO' && decodedData[1].toUpperCase() === 'REPLICATION') {
+        socket.write(encodeBulkString("role:master"));
+      }
+
       if (decodedData.length === 2 && decodedData[0].toUpperCase() === 'GET') {
         const value = get(decodedData[1], globalObject);
         if (value === NULL_BULK_STRING) {
