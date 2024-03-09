@@ -57,4 +57,5 @@ server.on("connection", (socket) => {
   });
 });
 
-server.listen(6379, "127.0.0.1");
+const PORT = process.argv[2] === "--port" ? Number(process.argv[3]) : 6379;
+server.listen(PORT, "127.0.0.1");

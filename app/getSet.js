@@ -10,11 +10,7 @@ export const set = (key, value, object, expiresInMilliseconds = null) => {
 export const get = (key, object) => {
   if (key in object) {
     const expiresInMilliseconds = object[key]['expiresInMilliseconds'];
-    console.log(expiresInMilliseconds);
-    if (expiresInMilliseconds) {
-    console.log(new Date().getTime());
-    console.log(object[key]["createdAt"].getTime() + expiresInMilliseconds);
-    }
+    
     if (
       expiresInMilliseconds &&
       new Date().getTime() >=
