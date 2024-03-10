@@ -20,7 +20,7 @@ const regexExactMatch = (regex, str) => {
 const isSimpleString = (str) =>
   str.startsWith(SIMPLE_STRING_PREFIX) &&
   str.toLowerCase().endsWith(PROTOCOL_TERMINATOR);
-const decodeSimpleString = (str) => str.slice(1, -4);
+const decodeSimpleString = (str) => str.slice(1, -2);
 
 const isBulkString = (str) => regexExactMatch(BULK_STRING_REGEX, str);
 const decodeBulkString = (str) => {
@@ -71,4 +71,12 @@ export const decode = (str) => {
 
 export const encodeBulkString = (str) => {
     return `$${str.length}${PROTOCOL_TERMINATOR}${str}${PROTOCOL_TERMINATOR}`;
+}
+
+export const encodeArray = (stringArray) => {
+  let result = `*${stringArray.length}\r\n`;
+  stringArray.forEach(element => {
+    result += encodeBulkString(element);
+  });
+  return result;
 }

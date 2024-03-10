@@ -10,6 +10,11 @@ export const COMMANDS = {
     GET: 'GET',
     SET: 'SET',
     ECHO: 'ECHO',
+    REPLCONF: 'REPLCONF',
+}
+export const RESPONSES = {
+    PONG: 'PONG',
+    OK: 'OK',
 }
 export const SERVER_ROLES = {
     MASTER: 'master',
