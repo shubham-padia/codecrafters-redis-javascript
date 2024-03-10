@@ -3,11 +3,12 @@ import net from 'net';
 import { NULL_BULK_STRING, OK_RESP_STRING } from './constants.js';
 import { decode, encodeBulkString } from "./RespParser.js";
 import { set, get } from "./getSet.js";
+import { parse as argumentParse, getArgumentValue } from './ArgParser.js';
 
 // You can use print statements as follows for debugging, they'll be visible when running tests.
 console.log("Logs from your program will appear here!");
 
-
+const argumentValueObject = argumentParse(process.argv.slice(2));
 
 const server = net.createServer((connection) => {
   // Handle connection
@@ -61,5 +62,5 @@ server.on("connection", (socket) => {
   });
 });
 
-const PORT = process.argv[2] === "--port" ? Number(process.argv[3]) : 6379;
+const PORT = getArgumentValue('port', argumentValueObject, 6379);
 server.listen(PORT, "127.0.0.1");

@@ -2,7 +2,7 @@ export const parse = (argumentArray) => {
     return getArgumentValuePairsRecursive(argumentArray);
 }
 
-const getArgumentValuePairsRecursive = (argumentArray, i = 0, result = []) => {
+const getArgumentValuePairsRecursive = (argumentArray, i = 0, result = {}) => {
     const argumentArrayLength = argumentArray.length;
     if (i === argumentArrayLength) {
         return result;
@@ -12,7 +12,7 @@ const getArgumentValuePairsRecursive = (argumentArray, i = 0, result = []) => {
         throw new Error ('Invalid inline arguments.');
     }
 
-    const argument = argumentArray[i];
+    const argument = argumentArray[i].slice(2);
     i = i + 1;
     let value = ''
 
@@ -20,10 +20,14 @@ const getArgumentValuePairsRecursive = (argumentArray, i = 0, result = []) => {
         value = value + ' ' + argumentArray[i];
         i = i + 1;
     }
-    result.push({
-        argument,
-        value,
-    })
+    result[argument] = value;
 
     return getArgumentValuePairsRecursive(argumentArray, i, result);
+}
+
+export const getArgumentValue = (argumentKey, argumentValueObject, defaultValue = undefined) => {
+    if (argumentKey in argumentValueObject) {
+        return argumentValueObject[argumentKey];
+    }
+    return defaultValue;
 }
