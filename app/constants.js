@@ -4,3 +4,10 @@ export const SIMPLE_STRING_PREFIX = "+";
 export const ARRAY_PREFIX = "*";
 export const BULK_STRING_REGEX = /^\$[0-9]+\\r\\n(.+)\\r\\n/gi;
 export const PROTOCOL_TERMINATOR = "\r\n";
+export const COMMANDS = {
+    PING: 'PING',
+    INFO: 'INFO',
+    GET: 'GET',
+    SET: 'SET',
+    ECHO: 'ECHO',
+}

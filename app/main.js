@@ -1,9 +1,10 @@
 import net from 'net';
 
-import { NULL_BULK_STRING, OK_RESP_STRING } from './constants.js';
-import { decode, encodeBulkString } from "./RespParser.js";
-import { set, get } from "./getSet.js";
-import { parse as argumentParse, getArgumentValue } from './ArgParser.js';
+import { COMMANDS } from './constants.js';
+import { decode } from "./RespParser.js";
+import { parse as argumentParse, getArgumentValue, parse } from './ArgParser.js';
+import { parse as commmandParse } from './CommandParser.js';
+import { handleEcho, handlePing, handleSet, handleGet, handleInfo } from './commands.js';
 
 // You can use print statements as follows for debugging, they'll be visible when running tests.
 console.log("Logs from your program will appear here!");
@@ -19,38 +20,28 @@ let globalObject = {};
 server.on("connection", (socket) => {
   socket.on("data", (data) => {
     const decodedData = decode(data.toString());
+    const parsedCommand = commmandParse(decodedData);
+    
+    if (parsedCommand) {
+      const command = parsedCommand.command;
+      const value = parsedCommand.value;
 
-    if (Array.isArray(decodedData)) {
-      if (decodedData.length === 1 && decodedData[0].toUpperCase() === 'PING') {
-        socket.write("+PONG\r\n");
-      }
-
-      if (decodedData.length === 2 && decodedData[0].toUpperCase() === 'ECHO') {
-        socket.write(`+${decodedData[1]}\r\n`);
-      }
-
-      if (decodedData.length === 3 || decodedData.length === 5 && decodedData[0].toUpperCase() === 'SET') {
-        let expiresInMilliseconds = null;
-        if (decodedData.length === 5 && decodedData[3].toUpperCase() === 'PX') {
-          expiresInMilliseconds = Number(decodedData[4])
-        }
-
-        globalObject = set(decodedData[1], decodedData[2], globalObject, expiresInMilliseconds);
-        
-        socket.write(OK_RESP_STRING);
-      }
-
-      if (decodedData.length === 2 && decodedData[0].toUpperCase() === 'INFO' && decodedData[1].toUpperCase() === 'REPLICATION') {
-        socket.write(encodeBulkString("role:master"));
-      }
-
-      if (decodedData.length === 2 && decodedData[0].toUpperCase() === 'GET') {
-        const value = get(decodedData[1], globalObject);
-        if (value === NULL_BULK_STRING) {
-          socket.write(value);
-        } else {
-          socket.write(encodeBulkString(value));
-        }
+      switch (command) {
+        case COMMANDS.PING:
+          handlePing(socket);
+          break;
+        case COMMANDS.ECHO:
+          handleEcho(socket, value);
+          break;
+        case COMMANDS.SET:
+          globalObject = handleSet(socket, value, globalObject);
+          break;
+        case COMMANDS.GET:
+          handleGet(socket, value, globalObject);
+          break;
+        case COMMANDS.INFO:
+          handleInfo(socket, value);
+          break;
       }
     }
   });
