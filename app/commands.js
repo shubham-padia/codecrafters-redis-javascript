@@ -50,5 +50,7 @@ export const handleReplconf = (socket) => {
 }
 
 export const handlePsync = (socket) => {
-    socket.write('+FULLRESYNC 8371b4fb1155b71f4a04d3e1bc3e18c4a990aeeb 0\r\n')
+    socket.write('+FULLRESYNC 8371b4fb1155b71f4a04d3e1bc3e18c4a990aeeb 0\r\n');
+    const RDB_FILE_BINARY = Buffer.from("UkVESVMwMDEx+glyZWRpcy12ZXIFNy4yLjD6CnJlZGlzLWJpdHPAQPoFY3RpbWXCbQi8ZfoIdXNlZC1tZW3CsMQQAPoIYW9mLWJhc2XAAP/wbjv+wP9aog==", "base64");
+    socket.write(Buffer.concat([Buffer.from(`$${RDB_FILE_BINARY.length}\r\n`), RDB_FILE_BINARY]));
 }
