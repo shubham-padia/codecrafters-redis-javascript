@@ -11,3 +11,7 @@ export const COMMANDS = {
     SET: 'SET',
     ECHO: 'ECHO',
 }
+export const SERVER_ROLES = {
+    MASTER: 'master',
+    SLAVE: 'slave',
+}

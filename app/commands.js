@@ -35,10 +35,10 @@ export const handleGet = (socket, value, globalObject) => {
     }
 }
 
-export const handleInfo = (socket, value) => {
+export const handleInfo = (socket, value, serverInfo) => {
     if (!value) throw new Error('Missing argument.')
 
     if (value[0].toUpperCase() === 'REPLICATION') {
-        socket.write(encodeBulkString("role:master"));
+        socket.write(encodeBulkString(`role:${serverInfo.role}`));
     }
 }
