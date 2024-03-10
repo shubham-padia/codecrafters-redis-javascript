@@ -4,7 +4,7 @@ import { COMMANDS, RESPONSES, SERVER_ROLES } from './constants.js';
 import { decode, encodeArray } from "./RespParser.js";
 import { parse as argumentParse, getArgumentValue, parse } from './ArgParser.js';
 import { parse as commmandParse, responseParse } from './CommandParser.js';
-import { handleEcho, handlePing, handleSet, handleGet, handleInfo, handleReplconf } from './commands.js';
+import { handleEcho, handlePing, handleSet, handleGet, handleInfo, handleReplconf, handlePsync } from './commands.js';
 
 // You can use print statements as follows for debugging, they'll be visible when running tests.
 console.log("Logs from your program will appear here!");
@@ -103,6 +103,9 @@ server.on("connection", (socket) => {
           break;
         case COMMANDS.REPLCONF:
           handleReplconf(socket);
+          break;
+        case COMMANDS.PSYNC:
+          handlePsync(socket);
           break;
       }
     }
