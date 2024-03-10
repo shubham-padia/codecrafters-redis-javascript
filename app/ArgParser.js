@@ -20,7 +20,7 @@ const getArgumentValuePairsRecursive = (argumentArray, i = 0, result = {}) => {
         value = value + ' ' + argumentArray[i];
         i = i + 1;
     }
-    result[argument] = value;
+    result[argument] = value.trim();
 
     return getArgumentValuePairsRecursive(argumentArray, i, result);
 }

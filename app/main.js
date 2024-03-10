@@ -15,8 +15,15 @@ const serverInfo = {
 const argumentValueObject = argumentParse(process.argv.slice(2));
 const replicaOfValue = getArgumentValue('replicaof', argumentValueObject);
 
-if (replicaOfValue) {
+if (replicaOfValue && replicaOfValue.split(' ').length === 2) {
+  const replicaOfValueArray = replicaOfValue.split(' ');  
   serverInfo.role = SERVER_ROLES.SLAVE;
+
+  const client = new net.Socket();
+  client.connect(Number(replicaOfValueArray[1]), replicaOfValueArray[0], () => {
+    console.log('Connected to master instance!');
+    client.write("*1\r\n$4\r\nping\r\n");
+  });
 }
 
 const server = net.createServer((connection) => {
