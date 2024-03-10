@@ -11,6 +11,7 @@ export const COMMANDS = {
     SET: 'SET',
     ECHO: 'ECHO',
     REPLCONF: 'REPLCONF',
+    PSYNC: 'PSYNC',
 }
 export const RESPONSES = {
     PONG: 'PONG',

@@ -19,6 +19,8 @@ const replicaOfValue = getArgumentValue('replicaof', argumentValueObject);
 if (replicaOfValue && replicaOfValue.split(' ').length === 2) {
   const replicaOfValueArray = replicaOfValue.split(' ');
 
+  const replicationId = '?';
+  const replicationOffset = '-1';
   const handshakeSequence = [
     {
       send: encodeArray([COMMANDS.PING]),
@@ -29,10 +31,15 @@ if (replicaOfValue && replicaOfValue.split(' ').length === 2) {
       expectedResponse: RESPONSES.OK,
     },
     {
-      send: encodeArray([COMMANDS.REPLCONF, 'capa', 'psync2']),
+      send: encodeArray([COMMANDS.REPLCONF, 'capa', 'eof', 'capa', 'psync2']),
       expectedResponse: RESPONSES.OK,
+    },
+    {
+      send: encodeArray([COMMANDS.PSYNC, replicationId, replicationOffset]),
+      expectedResponse: `FULLRESYNC ? 0`,
     }
   ]
+  const handshakeSequenceLength = handshakeSequence.length;
 
   serverInfo.role = SERVER_ROLES.SLAVE;
 
@@ -50,14 +57,14 @@ if (replicaOfValue && replicaOfValue.split(' ').length === 2) {
     const parsedResponse = responseParse(decodedData);
 
     if (parsedResponse) {
-      if (parsedResponse.response === handshakeSequence[i].expectedResponse && i < 3) {
+      if (parsedResponse.response === handshakeSequence[i].expectedResponse && i < handshakeSequenceLength) {
         i = i + 1;
-        if (i < 3) {
+        if (i < handshakeSequenceLength) {
           client.write(handshakeSequence[i].send);
         }
       } 
     }
-    if (i === 3) {
+    if (i === handshakeSequenceLength) {
       console.log('HANDSHAKE COMPLETED');
     }
   })
