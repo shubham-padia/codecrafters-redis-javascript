@@ -20,12 +20,6 @@ server.on("connection", (socket) => {
   socket.on("data", (data) => {
     const decodedData = decode(data.toString());
 
-    if (
-      typeof decodedData === "string" ||
-      (decodedData instanceof String && decodedData.toUpperCase() === "PING")
-    )
-      socket.write("+PONG\r\n");
-
     if (Array.isArray(decodedData)) {
       if (decodedData.length === 1 && decodedData[0].toUpperCase() === 'PING') {
         socket.write("+PONG\r\n");

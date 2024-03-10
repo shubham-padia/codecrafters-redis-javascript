@@ -62,9 +62,9 @@ const decodeArray = (str) => {
 };
 
 export const decode = (str) => {
-  if (isSimpleString(str)) return decodeSimpleString(str);
+  if (isSimpleString(str)) return [decodeSimpleString(str)];
 
-  if (isBulkString(str)) return decodeBulkString(str);
+  if (isBulkString(str)) return [decodeBulkString(str)];
 
   if (isArray(str)) return decodeArray(str);
 };
