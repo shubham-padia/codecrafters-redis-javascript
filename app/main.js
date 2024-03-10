@@ -2,7 +2,7 @@ import net from 'net';
 
 import { NULL_BULK_STRING, OK_RESP_STRING } from './constants.js';
 import { decode, encodeBulkString } from "./RespParser.js";
-import { set, get } from "./getSet.js"
+import { set, get } from "./getSet.js";
 
 // You can use print statements as follows for debugging, they'll be visible when running tests.
 console.log("Logs from your program will appear here!");
