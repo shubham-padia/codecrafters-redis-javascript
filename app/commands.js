@@ -39,6 +39,8 @@ export const handleInfo = (socket, value, serverInfo) => {
     if (!value) throw new Error('Missing argument.')
 
     if (value[0].toUpperCase() === 'REPLICATION') {
-        socket.write(encodeBulkString(`role:${serverInfo.role}`));
+        socket.write(encodeBulkString(`role:${serverInfo.role}
+master_replid:8371b4fb1155b71f4a04d3e1bc3e18c4a990aeeb
+master_repl_offset:0`));
     }
 }
