@@ -1,13 +1,13 @@
 import { NULL_BULK_STRING } from "./constants.js";
 
-export const set = (key, value, object, expiresInMilliseconds = null) => {
+export const setValue = (key, value, object, expiresInMilliseconds = null) => {
   return {
     ...object,
     [key]: { value, createdAt: new Date(), expiresInMilliseconds },
   };
 };
 
-export const get = (key, object) => {
+export const getValue = (key, object) => {
   if (key in object) {
     const expiresInMilliseconds = object[key]['expiresInMilliseconds'];
     

@@ -1,5 +1,5 @@
 import { OK_RESP_STRING, NULL_BULK_STRING } from "./constants.js";
-import { get, set } from "./getSet.js";
+import { getValue, setValue } from "./store.js";
 import { encodeBulkString } from "./RespParser.js";
 
 export const handlePing = (socket) => socket.write("+PONG\r\n");
@@ -17,7 +17,7 @@ export const handleSet = (socket, value, globalObject) => {
         expiresInMilliseconds = Number(value[3]);
     }
 
-    globalObject = set(value[0], value[1], globalObject, expiresInMilliseconds);
+    globalObject = setValue(value[0], value[1], globalObject, expiresInMilliseconds);
     
     socket.write(OK_RESP_STRING);
 
@@ -27,7 +27,7 @@ export const handleSet = (socket, value, globalObject) => {
 export const handleGet = (socket, value, globalObject) => {
     if (!value) throw new Error('Missing argument.')
 
-    const result = get(value[0], globalObject);
+    const result = getValue(value[0], globalObject);
     if (result === NULL_BULK_STRING) {
       socket.write(result);
     } else {
