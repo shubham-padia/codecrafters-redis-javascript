@@ -21,3 +21,11 @@ export const getValue = (key, object) => {
     } else return object[key]["value"];
   } else return NULL_BULK_STRING;
 };
+
+export const addToCommandHistory = (commandHistory, command) => {
+  commandHistory.push(command);
+  if (commandHistory.length > 10) {
+    commandHistory.shift();
+  }
+  return commandHistory;
+};

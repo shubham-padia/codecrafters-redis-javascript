@@ -1,4 +1,6 @@
-import { OK_RESP_STRING, NULL_BULK_STRING } from "./constants.js";
+import net from "net";
+
+import { OK_RESP_STRING, NULL_BULK_STRING, COMMANDS } from "./constants.js";
 import { getValue, setValue } from "./store.js";
 import { encodeBulkString } from "./RespParser.js";
 
@@ -59,7 +61,7 @@ export const handleReplconf = (socket) => {
   socket.write(OK_RESP_STRING);
 };
 
-export const handlePsync = (socket) => {
+export const handlePsync = (socket, store) => {
   socket.write("+FULLRESYNC 8371b4fb1155b71f4a04d3e1bc3e18c4a990aeeb 0\r\n");
   const RDB_FILE_BINARY = Buffer.from(
     "UkVESVMwMDEx+glyZWRpcy12ZXIFNy4yLjD6CnJlZGlzLWJpdHPAQPoFY3RpbWXCbQi8ZfoIdXNlZC1tZW3CsMQQAPoIYW9mLWJhc2XAAP/wbjv+wP9aog==",
@@ -71,4 +73,20 @@ export const handlePsync = (socket) => {
       RDB_FILE_BINARY,
     ]),
   );
+
+  const lastFourParsedCommands = store.commandHistory.slice(-4);
+  const lastFourCommands = lastFourParsedCommands.map(
+    (element) => element.command,
+  );
+  if (
+    lastFourCommands.toString() ===
+    [
+      COMMANDS.PING,
+      COMMANDS.REPLCONF,
+      COMMANDS.REPLCONF,
+      COMMANDS.PSYNC,
+    ].toString()
+  ) {
+    store.serverInfo.replicas.push(socket);
+  }
 };
