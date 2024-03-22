@@ -73,20 +73,7 @@ export const handlePsync = (socket, store) => {
       RDB_FILE_BINARY,
     ]),
   );
+  store.serverInfo.replicas.push(socket);
 
-  const lastFourParsedCommands = store.commandHistory.slice(-4);
-  const lastFourCommands = lastFourParsedCommands.map(
-    (element) => element.command,
-  );
-  if (
-    lastFourCommands.toString() ===
-    [
-      COMMANDS.PING,
-      COMMANDS.REPLCONF,
-      COMMANDS.REPLCONF,
-      COMMANDS.PSYNC,
-    ].toString()
-  ) {
-    store.serverInfo.replicas.push(socket);
-  }
+  return store;
 };

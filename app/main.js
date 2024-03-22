@@ -18,7 +18,7 @@ import { addToCommandHistory } from "./store.js";
 // You can use print statements as follows for debugging, they'll be visible when running tests.
 console.log("Logs from your program will appear here!");
 
-const store = {
+let store = {
   serverInfo: {
     role: SERVER_ROLES.MASTER,
     replicas: [],
@@ -114,9 +114,11 @@ server.on("connection", (socket) => {
           break;
         case COMMANDS.SET:
           store.keyValueStore = handleSet(socket, value, store.keyValueStore);
+
           if (store.serverInfo.replicas.length > 0) {
             store.serverInfo.replicas.forEach((replica) => {
-              replica.write(encodeArray(decodedData));
+              replica.write(data.toString());
+              return;
             });
           }
           break;
@@ -130,7 +132,7 @@ server.on("connection", (socket) => {
           handleReplconf(socket);
           break;
         case COMMANDS.PSYNC:
-          handlePsync(socket, store);
+          store = handlePsync(socket, store);
           break;
       }
     }
