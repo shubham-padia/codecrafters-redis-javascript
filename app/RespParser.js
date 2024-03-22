@@ -8,6 +8,7 @@ import {
   SIMPLE_STRING_PREFIX,
   ARRAY_PREFIX,
   BULK_STRING_REGEX,
+  RDB_FILE_REGEX,
 } from "./constants.js";
 
 const escapeRegExp = (str) => {
@@ -21,10 +22,15 @@ const regexExactMatch = (regex, str) => {
   return match && str === match[0];
 };
 
-const isSimpleString = (str) =>
-  str.startsWith(SIMPLE_STRING_PREFIX) &&
-  str.toLowerCase().endsWith(PROTOCOL_TERMINATOR);
-const decodeSimpleString = (str) => str.slice(1, -2);
+const isSimpleString = (str) => str.startsWith(SIMPLE_STRING_PREFIX);
+
+const decodeSimpleString = (str) => {
+  const lineBreakIndex = str.indexOf("\r\n");
+  return {
+    result: str.slice(1, lineBreakIndex),
+    leftoverStr: str.slice(lineBreakIndex + 2),
+  };
+};
 
 const isBulkString = (str) => regexExactMatch(BULK_STRING_REGEX, str);
 const decodeBulkString = (str) => {
@@ -32,7 +38,21 @@ const decodeBulkString = (str) => {
   // if bulkString is $3\r\nhey\r\n, then we're trying to find the length of $3\r\n,
   // need to calculate when the string length can be double, triple digits or more.
   const prefixLength = Math.ceil(Math.log10(bulkStringLength + 1)) + 5;
-  return str.slice(prefixLength, prefixLength + bulkStringLength);
+  return {
+    result: str.slice(prefixLength, prefixLength + bulkStringLength),
+    leftoverStr: str.slice(prefixLength + bulkStringLength + 2),
+  };
+};
+
+const decodeRDBFile = (str) => {
+  const bulkStringLength = findFirstInteger(str);
+  // if bulkString is $3\r\nhey\r\n, then we're trying to find the length of $3\r\n,
+  // need to calculate when the string length can be double, triple digits or more.
+  const prefixLength = Math.ceil(Math.log10(bulkStringLength + 1)) + 5;
+  return {
+    result: "",
+    leftoverStr: str.slice(prefixLength + bulkStringLength - 3),
+  };
 };
 
 const isArray = (str) =>
@@ -62,15 +82,44 @@ const decodeArray = (str) => {
     arrayItemsStr = arrayItemsStr.slice(prefixLength + bulkStringLength + 2);
   }
 
-  return array;
+  return {
+    result: array,
+    leftoverStr: arrayItemsStr,
+  };
 };
 
-export const decode = (str) => {
-  if (isSimpleString(str)) return [decodeSimpleString(str)];
+export const decode = (str, resultArray = []) => {
+  if (isSimpleString(str)) {
+    const decodedSimpleString = decodeSimpleString(str);
+    resultArray.push([decodedSimpleString.result]);
+    if (decodedSimpleString.leftoverStr !== "") {
+      resultArray = decode(decodedSimpleString.leftoverStr, resultArray);
+    }
+  }
 
-  if (isBulkString(str)) return [decodeBulkString(str)];
+  if (isBulkString(str)) {
+    const decodedBulkString = decodeBulkString(str);
+    resultArray.push([decodedBulkString.result]);
+    if (decodedBulkString.leftoverStr !== "") {
+      resultArray = decode(decodedBulkString.leftoverStr, resultArray);
+    }
+  }
 
-  if (isArray(str)) return decodeArray(str);
+  if (str.startsWith("$")) {
+    const decodedRDBFile = decodeRDBFile(str);
+    if (decodedRDBFile.leftoverStr !== "") {
+      resultArray = decode(decodedRDBFile.leftoverStr, resultArray);
+    }
+  }
+
+  if (isArray(str)) {
+    const decodedArray = decodeArray(str);
+    resultArray.push(decodedArray.result);
+    if (decodedArray.leftoverStr !== "") {
+      resultArray = decode(decodedArray.leftoverStr, resultArray);
+    }
+  }
+  return resultArray;
 };
 
 export const encodeBulkString = (str) => {

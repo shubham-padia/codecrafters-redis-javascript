@@ -1,8 +1,13 @@
 import net from "net";
 
-import { OK_RESP_STRING, NULL_BULK_STRING, COMMANDS } from "./constants.js";
+import {
+  OK_RESP_STRING,
+  NULL_BULK_STRING,
+  COMMANDS,
+  SERVER_ROLES,
+} from "./constants.js";
 import { getValue, setValue } from "./store.js";
-import { encodeBulkString } from "./RespParser.js";
+import { encodeBulkString, encodeArray } from "./RespParser.js";
 
 export const handlePing = (socket) => socket.write("+PONG\r\n");
 
@@ -14,7 +19,7 @@ export const handleEcho = (socket, value) => {
   socket.write(`+${value}\r\n`);
 };
 
-export const handleSet = (socket, value, globalObject) => {
+export const handleSet = (socket, value, store) => {
   if (!value) throw new Error("Missing argument.");
 
   let expiresInMilliseconds = null;
@@ -22,16 +27,17 @@ export const handleSet = (socket, value, globalObject) => {
     expiresInMilliseconds = Number(value[3]);
   }
 
-  globalObject = setValue(
+  store.keyValueStore = setValue(
     value[0],
     value[1],
-    globalObject,
+    store.keyValueStore,
     expiresInMilliseconds,
   );
 
-  socket.write(OK_RESP_STRING);
+  if (store.serverInfo.role === SERVER_ROLES.MASTER)
+    socket.write(OK_RESP_STRING);
 
-  return globalObject;
+  return store;
 };
 
 export const handleGet = (socket, value, globalObject) => {
@@ -75,5 +81,40 @@ export const handlePsync = (socket, store) => {
   );
   store.serverInfo.replicas.push(socket);
 
+  return store;
+};
+
+export const handleCommand = (parsedCommand, socket, store, data) => {
+  const command = parsedCommand.command;
+  const value = parsedCommand.value;
+
+  switch (command) {
+    case COMMANDS.PING:
+      handlePing(socket);
+      break;
+    case COMMANDS.ECHO:
+      handleEcho(socket, value);
+      break;
+    case COMMANDS.SET:
+      store = handleSet(socket, value, store);
+      if (store.serverInfo.replicas.length > 0) {
+        store.serverInfo.replicas.forEach((replica) => {
+          replica.write(encodeArray(data));
+        });
+      }
+      break;
+    case COMMANDS.GET:
+      handleGet(socket, value, store.keyValueStore);
+      break;
+    case COMMANDS.INFO:
+      handleInfo(socket, value, store.serverInfo);
+      break;
+    case COMMANDS.REPLCONF:
+      handleReplconf(socket);
+      break;
+    case COMMANDS.PSYNC:
+      store = handlePsync(socket, store);
+      break;
+  }
   return store;
 };

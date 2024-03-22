@@ -27,5 +27,6 @@ export const addToCommandHistory = (commandHistory, command) => {
   if (commandHistory.length > 10) {
     commandHistory.shift();
   }
+
   return commandHistory;
 };

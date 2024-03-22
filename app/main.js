@@ -4,15 +4,7 @@ import { COMMANDS, RESPONSES, SERVER_ROLES } from "./constants.js";
 import { decode, encodeArray } from "./RespParser.js";
 import { parse as argumentParse, getArgumentValue } from "./ArgParser.js";
 import { parse as commmandParse, responseParse } from "./CommandParser.js";
-import {
-  handleEcho,
-  handlePing,
-  handleSet,
-  handleGet,
-  handleInfo,
-  handleReplconf,
-  handlePsync,
-} from "./commands.js";
+import { handleCommand } from "./commands.js";
 import { addToCommandHistory } from "./store.js";
 
 // You can use print statements as follows for debugging, they'll be visible when running tests.
@@ -69,22 +61,34 @@ if (replicaOfValue && replicaOfValue.split(" ").length === 2) {
 
   client.on("data", (data) => {
     const decodedData = decode(data.toString());
-    const parsedResponse = responseParse(decodedData);
 
-    if (parsedResponse) {
-      if (
-        parsedResponse.response === handshakeSequence[i].expectedResponse &&
-        i < handshakeSequenceLength
-      ) {
-        i = i + 1;
-        if (i < handshakeSequenceLength) {
-          client.write(handshakeSequence[i].send);
-        }
+    decodedData.forEach((element) => {
+      if (i > handshakeSequenceLength) {
+        const parsedCommand = commmandParse(element);
+        store = handleCommand(parsedCommand, client, store, element);
       }
-    }
-    if (i === handshakeSequenceLength) {
-      console.log("HANDSHAKE COMPLETED");
-    }
+
+      const parsedResponse = responseParse(element);
+
+      if (parsedResponse) {
+        if (
+          parsedResponse.response === handshakeSequence[i].expectedResponse &&
+          i < handshakeSequenceLength
+        ) {
+          i = i + 1;
+          if (i < handshakeSequenceLength) {
+            client.write(handshakeSequence[i].send);
+          }
+        }
+      } else if (i === 3) {
+        i = i + 1;
+      }
+
+      if (i === handshakeSequenceLength) {
+        console.log("HANDSHAKE COMPLETED");
+        i = i + 1;
+      }
+    });
   });
 }
 
@@ -95,47 +99,18 @@ const server = net.createServer((connection) => {
 server.on("connection", (socket) => {
   socket.on("data", (data) => {
     const decodedData = decode(data.toString());
-    const parsedCommand = commmandParse(decodedData);
-    store.commandHistory = addToCommandHistory(
-      store.commandHistory,
-      parsedCommand,
-    );
 
-    if (parsedCommand) {
-      const command = parsedCommand.command;
-      const value = parsedCommand.value;
+    decodedData.forEach((element) => {
+      const parsedCommand = commmandParse(element);
+      store.commandHistory = addToCommandHistory(
+        store.commandHistory,
+        parsedCommand,
+      );
 
-      switch (command) {
-        case COMMANDS.PING:
-          handlePing(socket);
-          break;
-        case COMMANDS.ECHO:
-          handleEcho(socket, value);
-          break;
-        case COMMANDS.SET:
-          store.keyValueStore = handleSet(socket, value, store.keyValueStore);
-
-          if (store.serverInfo.replicas.length > 0) {
-            store.serverInfo.replicas.forEach((replica) => {
-              replica.write(data.toString());
-              return;
-            });
-          }
-          break;
-        case COMMANDS.GET:
-          handleGet(socket, value, store.keyValueStore);
-          break;
-        case COMMANDS.INFO:
-          handleInfo(socket, value, store.serverInfo);
-          break;
-        case COMMANDS.REPLCONF:
-          handleReplconf(socket);
-          break;
-        case COMMANDS.PSYNC:
-          store = handlePsync(socket, store);
-          break;
+      if (parsedCommand) {
+        store = handleCommand(parsedCommand, socket, store, element);
       }
-    }
+    });
   });
 });
 

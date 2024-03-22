@@ -3,6 +3,7 @@ export const OK_RESP_STRING = "+OK\r\n";
 export const SIMPLE_STRING_PREFIX = "+";
 export const ARRAY_PREFIX = "*";
 export const BULK_STRING_REGEX = /^\$[0-9]+\\r\\n(.+)\\r\\n/gi;
+export const RDB_FILE_REGEX = /^\$[0-9]+\X+/;
 export const PROTOCOL_TERMINATOR = "\r\n";
 export const COMMANDS = {
   PING: "PING",
