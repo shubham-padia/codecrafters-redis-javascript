@@ -9,7 +9,9 @@ import {
 import { getValue, setValue } from "./store.js";
 import { encodeBulkString, encodeArray } from "./RespParser.js";
 
-export const handlePing = (socket) => socket.write("+PONG\r\n");
+export const handlePing = (socket, store) => {
+  if (store.serverInfo.role === SERVER_ROLES.MASTER) socket.write("+PONG\r\n");
+};
 
 export const handleEcho = (socket, value) => {
   if (!value)
@@ -63,9 +65,11 @@ master_repl_offset:0`),
   }
 };
 
-export const handleReplconf = (socket, value) => {
+export const handleReplconf = (socket, value, store) => {
   if (value[0].toUpperCase() === "GETACK") {
-    socket.write(encodeArray([COMMANDS.REPLCONF, "ACK", "0"]));
+    socket.write(
+      encodeArray([COMMANDS.REPLCONF, "ACK", store.offset.toString()]),
+    );
   } else {
     socket.write(OK_RESP_STRING);
   }
@@ -94,7 +98,7 @@ export const handleCommand = (parsedCommand, socket, store, data) => {
 
   switch (command) {
     case COMMANDS.PING:
-      handlePing(socket);
+      handlePing(socket, store);
       break;
     case COMMANDS.ECHO:
       handleEcho(socket, value);
@@ -114,7 +118,7 @@ export const handleCommand = (parsedCommand, socket, store, data) => {
       handleInfo(socket, value, store.serverInfo);
       break;
     case COMMANDS.REPLCONF:
-      handleReplconf(socket, value);
+      handleReplconf(socket, value, store);
       break;
     case COMMANDS.PSYNC:
       store = handlePsync(socket, store);

@@ -15,6 +15,7 @@ let store = {
     role: SERVER_ROLES.MASTER,
     replicas: [],
   },
+  offset: 0,
   commandHistory: [],
   keyValueStore: {},
 };
@@ -66,6 +67,7 @@ if (replicaOfValue && replicaOfValue.split(" ").length === 2) {
       if (i > handshakeSequenceLength) {
         const parsedCommand = commmandParse(element);
         store = handleCommand(parsedCommand, client, store, element);
+        store.offset += new Blob([encodeArray(element)]).size;
       }
 
       const parsedResponse = responseParse(element);
