@@ -92,8 +92,8 @@ export const handlePsync = (socket, store) => {
   return store;
 };
 
-const handleWait = (socket) => {
-  socket.write(":0\r\n");
+const handleWait = (socket, store) => {
+  socket.write(`:${store.serverInfo.replicas.length}\r\n`);
 };
 
 export const handleCommand = (parsedCommand, socket, store, data) => {
@@ -128,7 +128,7 @@ export const handleCommand = (parsedCommand, socket, store, data) => {
       store = handlePsync(socket, store);
       break;
     case COMMANDS.WAIT:
-      handleWait(socket);
+      handleWait(socket, store);
   }
   return store;
 };
