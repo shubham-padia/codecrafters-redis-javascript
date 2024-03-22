@@ -2,14 +2,18 @@
 // is that I would have to escape the string to do a match and that would modify the original string
 // inside which is just a bunch of bytes basically
 
-import { findFirstInteger } from './utils.js';
-import { PROTOCOL_TERMINATOR, SIMPLE_STRING_PREFIX, ARRAY_PREFIX, BULK_STRING_REGEX } from './constants.js';
-
+import { findFirstInteger } from "./utils.js";
+import {
+  PROTOCOL_TERMINATOR,
+  SIMPLE_STRING_PREFIX,
+  ARRAY_PREFIX,
+  BULK_STRING_REGEX,
+} from "./constants.js";
 
 const escapeRegExp = (str) => {
-    str = str.replace(/\r\n/g, "\\r\\n");
-    return str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"); // $& means the whole matched string
-}
+  str = str.replace(/\r\n/g, "\\r\\n");
+  return str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"); // $& means the whole matched string
+};
 
 const regexExactMatch = (regex, str) => {
   str = escapeRegExp(str);
@@ -70,13 +74,13 @@ export const decode = (str) => {
 };
 
 export const encodeBulkString = (str) => {
-    return `$${str.length}${PROTOCOL_TERMINATOR}${str}${PROTOCOL_TERMINATOR}`;
-}
+  return `$${str.length}${PROTOCOL_TERMINATOR}${str}${PROTOCOL_TERMINATOR}`;
+};
 
 export const encodeArray = (stringArray) => {
   let result = `*${stringArray.length}\r\n`;
-  stringArray.forEach(element => {
+  stringArray.forEach((element) => {
     result += encodeBulkString(element);
   });
   return result;
-}
+};

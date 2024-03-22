@@ -9,8 +9,8 @@ export const setValue = (key, value, object, expiresInMilliseconds = null) => {
 
 export const getValue = (key, object) => {
   if (key in object) {
-    const expiresInMilliseconds = object[key]['expiresInMilliseconds'];
-    
+    const expiresInMilliseconds = object[key]["expiresInMilliseconds"];
+
     if (
       expiresInMilliseconds &&
       new Date().getTime() >=

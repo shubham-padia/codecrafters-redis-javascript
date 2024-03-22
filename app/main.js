@@ -1,44 +1,56 @@
-import net from 'net';
+import net from "net";
 
-import { COMMANDS, RESPONSES, SERVER_ROLES } from './constants.js';
+import { COMMANDS, RESPONSES, SERVER_ROLES } from "./constants.js";
 import { decode, encodeArray } from "./RespParser.js";
-import { parse as argumentParse, getArgumentValue, parse } from './ArgParser.js';
-import { parse as commmandParse, responseParse } from './CommandParser.js';
-import { handleEcho, handlePing, handleSet, handleGet, handleInfo, handleReplconf, handlePsync } from './commands.js';
+import {
+  parse as argumentParse,
+  getArgumentValue,
+  parse,
+} from "./ArgParser.js";
+import { parse as commmandParse, responseParse } from "./CommandParser.js";
+import {
+  handleEcho,
+  handlePing,
+  handleSet,
+  handleGet,
+  handleInfo,
+  handleReplconf,
+  handlePsync,
+} from "./commands.js";
 
 // You can use print statements as follows for debugging, they'll be visible when running tests.
 console.log("Logs from your program will appear here!");
 
 const serverInfo = {
   role: SERVER_ROLES.MASTER,
-}
+};
 const argumentValueObject = argumentParse(process.argv.slice(2));
-const PORT = getArgumentValue('port', argumentValueObject, 6379);
-const replicaOfValue = getArgumentValue('replicaof', argumentValueObject);
+const PORT = getArgumentValue("port", argumentValueObject, 6379);
+const replicaOfValue = getArgumentValue("replicaof", argumentValueObject);
 
-if (replicaOfValue && replicaOfValue.split(' ').length === 2) {
-  const replicaOfValueArray = replicaOfValue.split(' ');
+if (replicaOfValue && replicaOfValue.split(" ").length === 2) {
+  const replicaOfValueArray = replicaOfValue.split(" ");
 
-  const replicationId = '?';
-  const replicationOffset = '-1';
+  const replicationId = "?";
+  const replicationOffset = "-1";
   const handshakeSequence = [
     {
       send: encodeArray([COMMANDS.PING]),
-      expectedResponse: RESPONSES.PONG, 
+      expectedResponse: RESPONSES.PONG,
     },
     {
-      send: encodeArray([COMMANDS.REPLCONF, 'listening-port', PORT.toString()]),
+      send: encodeArray([COMMANDS.REPLCONF, "listening-port", PORT.toString()]),
       expectedResponse: RESPONSES.OK,
     },
     {
-      send: encodeArray([COMMANDS.REPLCONF, 'capa', 'eof', 'capa', 'psync2']),
+      send: encodeArray([COMMANDS.REPLCONF, "capa", "eof", "capa", "psync2"]),
       expectedResponse: RESPONSES.OK,
     },
     {
       send: encodeArray([COMMANDS.PSYNC, replicationId, replicationOffset]),
       expectedResponse: `FULLRESYNC ? 0`,
-    }
-  ]
+    },
+  ];
   const handshakeSequenceLength = handshakeSequence.length;
 
   serverInfo.role = SERVER_ROLES.SLAVE;
@@ -48,7 +60,7 @@ if (replicaOfValue && replicaOfValue.split(' ').length === 2) {
   const client = new net.Socket();
 
   client.connect(Number(replicaOfValueArray[1]), replicaOfValueArray[0], () => {
-    console.log('Connected to master instance!');
+    console.log("Connected to master instance!");
     client.write(handshakeSequence[i].send);
   });
 
@@ -57,17 +69,20 @@ if (replicaOfValue && replicaOfValue.split(' ').length === 2) {
     const parsedResponse = responseParse(decodedData);
 
     if (parsedResponse) {
-      if (parsedResponse.response === handshakeSequence[i].expectedResponse && i < handshakeSequenceLength) {
+      if (
+        parsedResponse.response === handshakeSequence[i].expectedResponse &&
+        i < handshakeSequenceLength
+      ) {
         i = i + 1;
         if (i < handshakeSequenceLength) {
           client.write(handshakeSequence[i].send);
         }
-      } 
+      }
     }
     if (i === handshakeSequenceLength) {
-      console.log('HANDSHAKE COMPLETED');
+      console.log("HANDSHAKE COMPLETED");
     }
-  })
+  });
 }
 
 const server = net.createServer((connection) => {
