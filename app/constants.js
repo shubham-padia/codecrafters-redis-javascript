@@ -13,6 +13,7 @@ export const COMMANDS = {
   ECHO: "ECHO",
   REPLCONF: "REPLCONF",
   PSYNC: "PSYNC",
+  WAIT: "WAIT",
 };
 export const RESPONSES = {
   PONG: "PONG",

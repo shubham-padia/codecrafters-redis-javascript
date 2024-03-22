@@ -92,6 +92,10 @@ export const handlePsync = (socket, store) => {
   return store;
 };
 
+const handleWait = (socket) => {
+  socket.write(":0\r\n");
+};
+
 export const handleCommand = (parsedCommand, socket, store, data) => {
   const command = parsedCommand.command;
   const value = parsedCommand.value;
@@ -123,6 +127,8 @@ export const handleCommand = (parsedCommand, socket, store, data) => {
     case COMMANDS.PSYNC:
       store = handlePsync(socket, store);
       break;
+    case COMMANDS.WAIT:
+      handleWait(socket);
   }
   return store;
 };
