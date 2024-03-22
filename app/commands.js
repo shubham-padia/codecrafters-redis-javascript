@@ -63,8 +63,12 @@ master_repl_offset:0`),
   }
 };
 
-export const handleReplconf = (socket) => {
-  socket.write(OK_RESP_STRING);
+export const handleReplconf = (socket, value) => {
+  if (value[0].toUpperCase() === "GETACK") {
+    socket.write(encodeArray([COMMANDS.REPLCONF, "ACK", "0"]));
+  } else {
+    socket.write(OK_RESP_STRING);
+  }
 };
 
 export const handlePsync = (socket, store) => {
@@ -110,7 +114,7 @@ export const handleCommand = (parsedCommand, socket, store, data) => {
       handleInfo(socket, value, store.serverInfo);
       break;
     case COMMANDS.REPLCONF:
-      handleReplconf(socket);
+      handleReplconf(socket, value);
       break;
     case COMMANDS.PSYNC:
       store = handlePsync(socket, store);
